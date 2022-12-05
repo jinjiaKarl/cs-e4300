@@ -4,6 +4,10 @@
 route add default gw 172.16.16.1
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
+## Set up virtual network
+ip link add eth0 type dummy
+ip addr add 10.1.0.99/16 dev eth0 label eth0:vpn
+
 ## Redirect to cloud with Destination NAT
 iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
 
@@ -12,7 +16,7 @@ iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.
 iptables -A INPUT -i enp0s9 -s 10.1.0.0/16 -j ACCEPT
 iptables -A INPUT -i enp0s3 -j ACCEPT
 ### Accept ESP from enp0s8
-iptables -A INPUT -p esp -i enp0s8 -s 172.16.16.16 -j ACCEPT
+iptables -A INPUT -p esp -i enp0s8 -s 172.30.30.30 -j ACCEPT
 ### Accept IKE
 iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 ### Drop everything else
