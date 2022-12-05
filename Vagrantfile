@@ -78,36 +78,11 @@ Vagrant.configure("2") do |config|
       vb.linked_clone = true
       vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
     end
+    # Certificate revocation list
+    gateway_a.vm.provision :file, source: './scripts/crls',
+      destination: "crls"
     # Install dependencies and define the NAT
     gateway_a.vm.provision :shell, run: "always", path: "scripts/site_a_gateway.sh"
-  end
-
-  # Local server A
-  config.vm.define "server-a" do |server_a|
-    server_a.vm.box = "base"
-    server_a.vm.hostname = "server-a"
-    server_a.vbguest.auto_update = false
-    ## NETWORK INTERFACES
-    # Interface towards customer site network
-    server_a.vm.network "private_network",
-      ip: "10.1.0.99",
-      netmask: "255.255.0.0",
-      virtualbox__intnet: "intranet_a"
-    server_a.vm.provider "virtualbox" do |vb|
-      vb.name = "server-a"
-      # Change the default Vagrant ssh address
-      vb.customize ['modifyvm', :id, '--natnet1', '192.168.113.0/24']
-      # Performance
-      vb.cpus = 1
-      vb.memory = 512
-      vb.linked_clone = true
-      vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
-    end
-    # Server app
-    server_a.vm.provision :file, source: './apps/server_app',
-      destination: "server_app"
-    # Install dependencies and define the NAT
-    server_a.vm.provision :shell, run: "always", path: "scripts/local_server.sh"
   end
 
   # Client A1
@@ -197,36 +172,11 @@ Vagrant.configure("2") do |config|
       vb.linked_clone = true
       vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
     end
+    # Certificate revocation list
+    gateway_b.vm.provision :file, source: './scripts/crls',
+      destination: "crls"
     # Install dependencies and define the NAT
     gateway_b.vm.provision :shell, run: "always", path: "scripts/site_b_gateway.sh"
-  end
-
-  # Local server B
-  config.vm.define "server-b" do |server_b|
-    server_b.vm.box = "base"
-    server_b.vm.hostname = "server-b"
-    server_b.vbguest.auto_update = false
-    ## NETWORK INTERFACES
-    # Interface towards customer site network
-    server_b.vm.network "private_network",
-      ip: "10.1.0.99",
-      netmask: "255.255.0.0",
-      virtualbox__intnet: "intranet_b"
-    server_b.vm.provider "virtualbox" do |vb|
-      vb.name = "server-b"
-      # Change the default Vagrant ssh address
-      vb.customize ['modifyvm', :id, '--natnet1', '192.168.117.0/24']
-      # Performance
-      vb.cpus = 1
-      vb.memory = 512
-      vb.linked_clone = true
-      vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
-    end
-    # Server app
-    server_b.vm.provision :file, source: './apps/server_app',
-      destination: "server_app"
-    # Install dependencies and define the NAT
-    server_b.vm.provision :shell, run: "always", path: "scripts/local_server.sh"
   end
 
   # Client B1
@@ -307,8 +257,8 @@ Vagrant.configure("2") do |config|
       virtualbox__intnet: "isp_link_s"
     # Interface towards cloud network
     gateway_s.vm.network "private_network",
-      ip: "172.48.48.49",
-      netmask: "255.255.255.240",
+      ip: "10.1.0.1",
+      netmask: "255.255.0.0",
       virtualbox__intnet: "cloud_network_s"
     gateway_s.vm.provider "virtualbox" do |vb|
       vb.name = "gateway-s"
@@ -320,6 +270,9 @@ Vagrant.configure("2") do |config|
       vb.linked_clone = true
       vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
     end
+    # Certificate revocation list
+    gateway_s.vm.provision :file, source: './scripts/crls',
+      destination: "crls"
     # Install dependencies and define the NAT
     gateway_s.vm.provision :shell, run: "always", path: "scripts/cloud_s_gateway.sh"
   end
@@ -332,8 +285,8 @@ Vagrant.configure("2") do |config|
     ## NETWORK INTERFACES
     # Interface towards cloud network
     server_s1.vm.network "private_network",
-      ip: "172.48.48.51",
-      netmask: "255.255.255.240",
+      ip: "10.1.0.2",
+      netmask: "255.255.0.0",
       virtualbox__intnet: "cloud_network_s"
     server_s1.vm.provider "virtualbox" do |vb|
       vb.name = "server-s1"
@@ -350,34 +303,6 @@ Vagrant.configure("2") do |config|
       destination: "server_app"
     # Install dependencies and define the NAT
     server_s1.vm.provision :shell, run: "always", path: "scripts/cloud_server.sh"
-  end
-
-  # Cloud server S2
-  config.vm.define "server-s2" do |server_s2|
-    server_s2.vm.box = "base"
-    server_s2.vm.hostname = "server-s2"
-    server_s2.vbguest.auto_update = false
-    ## NETWORK INTERFACES
-    # Interface towards cloud network
-    server_s2.vm.network "private_network",
-      ip: "172.48.48.52",
-      netmask: "255.255.255.240",
-      virtualbox__intnet: "cloud_network_s"
-    server_s2.vm.provider "virtualbox" do |vb|
-      vb.name = "server-s2"
-      # Change the default Vagrant ssh address
-      vb.customize ['modifyvm', :id, '--natnet1', '192.168.122.0/24']
-      # Performance
-      vb.cpus = 1
-      vb.memory = 512
-      vb.linked_clone = true
-      vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
-    end
-    # Server app
-    server_s2.vm.provision :file, source: './apps/server_app',
-      destination: "server_app"
-    # Install dependencies and define the NAT
-    server_s2.vm.provision :shell, run: "always", path: "scripts/cloud_server.sh"
   end
 
 end
