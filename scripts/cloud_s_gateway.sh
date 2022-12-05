@@ -14,13 +14,11 @@ iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.18.18.18 --dport 8080 -j D
 ### Accept internal / virtual machine traffic
 iptables -A INPUT -i enp0s9 -s 10.1.0.0/16 -j ACCEPT
 iptables -A INPUT -i enp0s3 -j ACCEPT
-### Accept ESP from enp0s8
-iptables -A INPUT -p esp -i enp0s8 -s 172.16.16.16 -j ACCEPT
-iptables -A INPUT -p esp -i enp0s8 -s 172.18.18.18 -j ACCEPT
-### Accept IKE
-iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+### Accept IKE sessions from the client
+iptables -A INPUT -m conntrack -i enp0s8 -s 172.16.16.16 --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -A INPUT -m conntrack -i enp0s8 -s 172.18.18.18 --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT
 ### Drop everything else
-iptables -P INPUT DROP
+iptables -A INPUT -j DROP
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
@@ -136,14 +134,13 @@ conn %default
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
         auto=start
-        dpdaction=restart
+        dpdaction=hold
 conn cloud-to-a
         also=%default
         right=172.16.16.16
         rightsubnet=172.16.16.16/32
         rightcert=siteACert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Site A 172.16.16.16"
-
 conn cloud-to-b
         also=%default
         right=172.18.18.18
