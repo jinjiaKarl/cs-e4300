@@ -134,7 +134,7 @@ conn %default
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
         auto=start
-        dpdaction=hold
+        dpdaction=restart
 conn cloud-to-a
         also=%default
         right=172.16.16.16
