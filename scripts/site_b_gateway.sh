@@ -5,8 +5,16 @@ route add default gw 172.18.18.1
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
 ## Set up virtual network
+cat > /etc/eth0 <<EOL
+#!/bin/sh
 ip link add eth0 type dummy
 ip addr add 10.1.0.99/16 dev eth0 label eth0:vpn
+EOL
+chmod +x /etc/eth0
+cat > /etc/cron.d/eth0 <<EOL
+@reboot /etc/eth0
+EOL
+/etc/eth0
 
 ## Redirect to cloud with Destination NAT
 iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
