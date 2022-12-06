@@ -2,12 +2,20 @@
 
 ## NAT traffic going to the internet
 route add default gw 172.16.16.1
+iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
+
+## Set up virtual network
+ip link add eth0 type dummy
+ip addr add 10.1.0.99/16 dev eth0 label eth0:vpn
 
 ## Redirect to cloud with Destination NAT
-iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 10.3.0.1:8080
+iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 10.3.0.2:8080
 
+iptables -t nat -A POSTROUTING -d 10.3.0.2 -j ACCEPT
 
 ## outgoing traffic from the client to the cloud
+iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
 iptables -A OUTPUT -p udp --dport 500 -j ACCEPT
 iptables -A OUTPUT -p udp --dport 4500 -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 8080 -j ACCEPT
@@ -15,11 +23,12 @@ iptables -A OUTPUT -p esp -j ACCEPT
 iptables -A OUTPUT -p ah -j ACCEPT
 iptables -A OUTPUT -p icmp -j ACCEPT
 iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A OUTPUT -i enp0s3 -j ACCEPT
+iptables -A OUTPUT -o enp0s3 -j ACCEPT
 iptables -A OUTPUT -j DROP
 
-
 ## incoming traffic from the cloud to the client
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 iptables -A INPUT -p udp --sport 500 -j ACCEPT
 iptables -A INPUT -p udp --sport 4500 -j ACCEPT
 iptables -A INPUT -p tcp --sport 8080 -j ACCEPT
@@ -30,11 +39,8 @@ iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -i enp0s3 -j ACCEPT
 iptables -A INPUT -j DROP
 
-
-
 ## only allow vpn traffic to the cloud
-iptables -A FORWARD -j DROP
-
+# iptables -A FORWARD -j DROP
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
