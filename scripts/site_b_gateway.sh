@@ -150,7 +150,7 @@ conn b-to-cloud
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
         auto=start
-        dpdaction=hold
+        dpdaction=restart
 EOL
 
 ## Restart ipsec for updates to take effect
