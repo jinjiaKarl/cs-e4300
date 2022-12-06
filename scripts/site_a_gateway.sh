@@ -5,16 +5,8 @@ route add default gw 172.16.16.1
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
 ## Set up virtual network
-cat > /etc/eth0 <<EOL
-#!/bin/sh
 ip link add eth0 type dummy
 ip addr add 10.1.0.99/16 dev eth0 label eth0:vpn
-EOL
-chmod +x /etc/eth0
-cat > /etc/cron.d/eth0 <<EOL
-@reboot root /etc/eth0
-EOL
-/etc/eth0
 
 ## Redirect to cloud with Destination NAT
 iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
@@ -107,10 +99,15 @@ y2Lt26pOSW/bQ0d80V6Wu6FETiD9F88=
 EOL
 
 ## Certificate revocation lists
-mv /home/vagrant/crls /etc/ipsec.d
+mv /home/vagrant/crls/* /etc/ipsec.d/crls/
+rm -r /home/vagrant/crls
 
 ## Ipsec config
-echo ": ECDSA siteAKey.pem" >> /etc/ipsec.secrets
+FIND_FILE="/etc/ipsec.secrets"
+FIND_STR=": ECDSA siteAKey.pem"
+if [ `grep -c "$FIND_STR" $FIND_FILE` == '0' ];then
+    echo "$FIND_STR" >> $FIND_FILE
+fi
 
 cat > /etc/ipsec.conf <<EOL
 conn a-to-cloud
@@ -131,7 +128,7 @@ conn a-to-cloud
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
         auto=start
-        dpdaction=restart
+        dpdaction=hold
 EOL
 
 ## Restart ipsec for updates to take effect

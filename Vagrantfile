@@ -80,7 +80,7 @@ Vagrant.configure("2") do |config|
     end
     # Certificate revocation list
     gateway_a.vm.provision :file, source: './scripts/crls',
-      destination: "crls"
+      destination: "crls", run: "always"
     # Install dependencies and define the NAT
     gateway_a.vm.provision :shell, run: "always", path: "scripts/site_a_gateway.sh"
   end
@@ -174,7 +174,7 @@ Vagrant.configure("2") do |config|
     end
     # Certificate revocation list
     gateway_b.vm.provision :file, source: './scripts/crls',
-      destination: "crls"
+      destination: "crls", run: "always"
     # Install dependencies and define the NAT
     gateway_b.vm.provision :shell, run: "always", path: "scripts/site_b_gateway.sh"
   end
@@ -272,7 +272,7 @@ Vagrant.configure("2") do |config|
     end
     # Certificate revocation list
     gateway_s.vm.provision :file, source: './scripts/crls',
-      destination: "crls"
+      destination: "crls", run: "always"
     # Install dependencies and define the NAT
     gateway_s.vm.provision :shell, run: "always", path: "scripts/cloud_s_gateway.sh"
   end

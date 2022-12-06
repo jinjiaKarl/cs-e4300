@@ -115,10 +115,15 @@ xKVV+0FTc72OqV4KJJkC0m60Ky2MqhStQGszK4nnLr7XlBzccBJFeIMkV4mii8ws
 EOL
 
 ## Certificate revocation lists
-mv /home/vagrant/crls /etc/ipsec.d
+mv /home/vagrant/crls/* /etc/ipsec.d/crls/
+rm -r /home/vagrant/crls
 
 ## Ipsec config
-echo ": ECDSA cloudKey.pem" >> /etc/ipsec.secrets
+FIND_FILE="/etc/ipsec.secrets"
+FIND_STR=": ECDSA cloudKey.pem"
+if [ `grep -c "$FIND_STR" $FIND_FILE` == '0' ];then
+    echo "$FIND_STR" >> $FIND_FILE
+fi
 
 cat > /etc/ipsec.conf <<EOL
 conn %default
@@ -134,7 +139,7 @@ conn %default
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
         auto=start
-        dpdaction=restart
+        dpdaction=hold
 conn cloud-to-a
         also=%default
         right=172.16.16.16
