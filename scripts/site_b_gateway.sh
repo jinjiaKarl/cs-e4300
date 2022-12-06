@@ -2,23 +2,33 @@
 
 ## NAT traffic going to the internet
 route add default gw 172.18.18.1
-iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
-
-## Set up virtual network
-ip link add eth0 type dummy
-ip addr add 10.1.0.99/16 dev eth0 label eth0:vpn
 
 ## Redirect to cloud with Destination NAT
-iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
+iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 10.3.0.1:8080
 
-## Iptables rules (firewall)
-### Accept internal / virtual machine traffic
-iptables -A INPUT -i enp0s9 -s 10.1.0.0/16 -j ACCEPT
+## outgoing traffic from the client to the cloud
+iptables -A OUTPUT -p udp --dport 500 -j ACCEPT
+iptables -A OUTPUT -p udp --dport 4500 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 8080 -j ACCEPT
+iptables -A OUTPUT -p esp -j ACCEPT
+iptables -A OUTPUT -p ah -j ACCEPT
+iptables -A OUTPUT -p icmp -j ACCEPT
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -i enp0s3 -j ACCEPT
+iptables -A OUTPUT -j DROP
+
+
+## incoming traffic from the cloud to the client
+iptables -A INPUT -p udp --sport 500 -j ACCEPT
+iptables -A INPUT -p udp --sport 4500 -j ACCEPT
+iptables -A INPUT -p tcp --sport 8080 -j ACCEPT
+iptables -A INPUT -p esp -j ACCEPT
+iptables -A INPUT -p ah -j ACCEPT
+iptables -A INPUT -p icmp -j ACCEPT
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -i enp0s3 -j ACCEPT
-### Accept IKE sessions from the cloud
-iptables -A INPUT -m conntrack -i enp0s8 -s 172.30.30.30 --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT
-### Drop everything else
 iptables -A INPUT -j DROP
+
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
@@ -115,13 +125,13 @@ conn b-to-cloud
         leftfirewall=yes
         rightfirewall=yes
         left=172.18.18.18
-        leftsubnet=172.18.18.18/32
+        leftsubnet=10.1.0.0/16
         leftid=172.18.18.18
         leftcert=siteBCert.pem
         leftid="C=FI, O=CSE4300, CN=CSE4300 Site B 172.18.18.18"
         leftca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
         right=172.30.30.30
-        rightsubnet=172.30.30.30/32
+        rightsubnet=10.3.0.0/32
         rightcert=cloudCert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Cloud 172.30.30.30"
         rightca="C=FI, O=CSE4300, CN=CSE4300 Root CA"

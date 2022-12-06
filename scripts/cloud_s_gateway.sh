@@ -3,22 +3,38 @@
 ## Traffic going to the internet
 route add default gw 172.30.30.1
 
-## NAT Masquerade for enp0s8
-iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
-
-## Destination NAT from client to server
-iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.16.16.16 --dport 8080 -j DNAT --to-destination 10.1.0.2:8080
-iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.18.18.18 --dport 8080 -j DNAT --to-destination 10.1.0.2:8080
-
-## Iptables rules (firewall)
-### Accept internal / virtual machine traffic
-iptables -A INPUT -i enp0s9 -s 10.1.0.0/16 -j ACCEPT
+## incoming traffic from the internet to the cloud
+iptables -A INPUT -p udp -s 172.16.16.16 --sport 500 -j ACCEPT
+iptables -A INPUT -p udp -s 172.16.16.18 --sport 500 -j ACCEPT
+iptables -A INPUT -p udp -s 172.16.16.16 --sport 4500 -j ACCEPT
+iptables -A INPUT -p udp -s 172.16.16.18 --sport 4500 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+iptables -A INPUT -p esp -j ACCEPT
+iptables -A INPUT -p ah -j ACCEPT
+iptables -A INPUT -p icmp -j ACCEPT
+iptables -A INPUT -s 172.16.16.16 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -s 172.16.16.18 -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -i enp0s3 -j ACCEPT
-### Accept IKE sessions from the client
-iptables -A INPUT -m conntrack -i enp0s8 -s 172.16.16.16 --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT
-iptables -A INPUT -m conntrack -i enp0s8 -s 172.18.18.18 --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT
-### Drop everything else
 iptables -A INPUT -j DROP
+
+## outgoing traffic from the cloud to the internet
+iptables -A OUTPUT -p udp -d 172.16.16.16 --dport 500 -j ACCEPT
+iptables -A OUTPUT -p udp -d 172.16.16.18 --dport 500 -j ACCEPT
+iptables -A OUTPUT -p udp -d 172.16.16.18 --dport 4500 -j ACCEPT
+iptables -A OUTPUT -p udp -d 172.16.16.18 --dport 4500 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 8080 -j ACCEPT
+iptables -A OUTPUT -p esp -j ACCEPT
+iptables -A OUTPUT -p ah -j ACCEPT
+iptables -A OUTPUT -p icmp -j ACCEPT
+iptables -A OUTPUT -d 172.16.16.16 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -d 172.16.16.18 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -i enp0s3 -j ACCEPT
+iptables -A OUTPUT -j DROP
+
+
+## only vpn traffic to the internet
+iptables -A FORWARD -j DROP
+
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
@@ -131,7 +147,7 @@ conn %default
         leftfirewall=yes
         rightfirewall=yes
         left=172.30.30.30
-        leftsubnet=172.30.30.30/32
+        leftsubnet=10.3.0.0/16
         leftcert=cloudCert.pem
         leftid="C=FI, O=CSE4300, CN=CSE4300 Cloud 172.30.30.30"
         leftca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
@@ -143,13 +159,13 @@ conn %default
 conn cloud-to-a
         also=%default
         right=172.16.16.16
-        rightsubnet=172.16.16.16/32
+        rightsubnet=10.1.0.10/16
         rightcert=siteACert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Site A 172.16.16.16"
 conn cloud-to-b
         also=%default
         right=172.18.18.18
-        rightsubnet=172.18.18.18/32
+        rightsubnet=10.1.0.0/16
         rightcert=siteBCert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Site B 172.18.18.18"
 EOL
