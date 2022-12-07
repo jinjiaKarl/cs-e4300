@@ -7,18 +7,8 @@ route add default gw 172.30.30.1
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
 ## Destination NAT from client to server
-iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.16.16.16 --dport 8080 -j DNAT --to-destination 10.1.0.2:8080
-iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.18.18.18 --dport 8080 -j DNAT --to-destination 10.1.0.2:8080
-
-## Iptables rules (firewall)
-### Accept internal / virtual machine traffic
-iptables -A INPUT -i enp0s9 -s 10.1.0.0/16 -j ACCEPT
-iptables -A INPUT -i enp0s3 -j ACCEPT
-### Accept IKE sessions from the client
-iptables -A INPUT -m conntrack -i enp0s8 -s 172.16.16.16 --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT
-iptables -A INPUT -m conntrack -i enp0s8 -s 172.18.18.18 --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT
-### Drop everything else
-iptables -A INPUT -j DROP
+iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.16.16.16 --dport 8080 -j DNAT --to-destination 10.1.0.2:30000
+iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.18.18.18 --dport 8080 -j DNAT --to-destination 10.1.0.2:30001
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4

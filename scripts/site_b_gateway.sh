@@ -4,21 +4,11 @@
 route add default gw 172.18.18.1
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
-## Set up virtual network
-ip link add eth0 type dummy
-ip addr add 10.1.0.99/16 dev eth0 label eth0:vpn
+## Bind to the IP address of original local server to the interface
+ip addr add 10.1.0.99/16 dev enp0s9
 
 ## Redirect to cloud with Destination NAT
 iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
-
-## Iptables rules (firewall)
-### Accept internal / virtual machine traffic
-iptables -A INPUT -i enp0s9 -s 10.1.0.0/16 -j ACCEPT
-iptables -A INPUT -i enp0s3 -j ACCEPT
-### Accept IKE sessions from the cloud
-iptables -A INPUT -m conntrack -i enp0s8 -s 172.30.30.30 --ctstate NEW,RELATED,ESTABLISHED -j ACCEPT
-### Drop everything else
-iptables -A INPUT -j DROP
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
