@@ -4,16 +4,21 @@
 route add default gw 172.16.16.1
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
-## Set up virtual network
+## Set up virtual network (for ARP response)
 ip link add eth0 type dummy
 ip addr add 10.1.0.99/16 dev eth0 label eth0:vpn
 
 ## Redirect to cloud with Destination NAT
-iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 10.3.0.2:8080
+iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 10.2.0.2:8080
 
-iptables -t nat -A POSTROUTING -d 10.3.0.2 -j ACCEPT
+## Allow VPN traffic to the cloud
+iptables -t nat -I POSTROUTING -d 10.2.0.2 -j ACCEPT
 
-## outgoing traffic from the client to the cloud
+## Accept internal traffic
+iptables -A INPUT -i enp0s3 -j ACCEPT
+iptables -A OUTPUT -o enp0s3 -j ACCEPT
+
+## Outgoing traffic from the client to the cloud
 iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
 iptables -A OUTPUT -p udp --dport 500 -j ACCEPT
@@ -23,12 +28,11 @@ iptables -A OUTPUT -p esp -j ACCEPT
 iptables -A OUTPUT -p ah -j ACCEPT
 iptables -A OUTPUT -p icmp -j ACCEPT
 iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A OUTPUT -o enp0s3 -j ACCEPT
 iptables -A OUTPUT -j DROP
 
-## incoming traffic from the cloud to the client
-iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+## Incoming traffic from the cloud to the client
+iptables -A INPUT -p tcp --sport 80 -j ACCEPT
+iptables -A INPUT -p tcp --sport 443 -j ACCEPT
 iptables -A INPUT -p udp --sport 500 -j ACCEPT
 iptables -A INPUT -p udp --sport 4500 -j ACCEPT
 iptables -A INPUT -p tcp --sport 8080 -j ACCEPT
@@ -36,11 +40,7 @@ iptables -A INPUT -p esp -j ACCEPT
 iptables -A INPUT -p ah -j ACCEPT
 iptables -A INPUT -p icmp -j ACCEPT
 iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A INPUT -i enp0s3 -j ACCEPT
 iptables -A INPUT -j DROP
-
-## only allow vpn traffic to the cloud
-# iptables -A FORWARD -j DROP
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
@@ -143,7 +143,7 @@ conn a-to-cloud
         leftid="C=FI, O=CSE4300, CN=CSE4300 Site A 172.16.16.16"
         leftca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
         right=172.30.30.30
-        rightsubnet=10.3.0.0/16
+        rightsubnet=10.2.0.0/16
         rightcert=cloudCert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Cloud 172.30.30.30"
         rightca="C=FI, O=CSE4300, CN=CSE4300 Root CA"

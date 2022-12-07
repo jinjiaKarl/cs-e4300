@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## Traffic going to the internet
-route add default gw 10.3.0.1
+route add default gw 10.2.0.1
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
