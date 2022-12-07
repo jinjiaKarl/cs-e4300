@@ -6,13 +6,13 @@ iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
 ## Set up virtual network (for ARP response)
 ip link add eth0 type dummy
-ip addr add 10.1.0.99/16 dev eth0 label eth0:vpn
+ip addr add 10.2.0.99/16 dev eth0 label eth0:vpn
 
 ## Redirect to cloud with Destination NAT
-iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 10.2.0.2:8080
+iptables -t nat -A PREROUTING -p tcp -d 10.2.0.99 --dport 8080 -j DNAT --to 10.3.0.2:8080
 
 ## Allow VPN traffic to the cloud
-iptables -t nat -I POSTROUTING -d 10.2.0.2 -j ACCEPT
+iptables -t nat -I POSTROUTING -d 10.3.0.2 -j ACCEPT
 
 ## Accept internal traffic
 iptables -A INPUT -i enp0s3 -j ACCEPT
@@ -137,20 +137,20 @@ conn b-to-cloud
         leftfirewall=yes
         rightfirewall=yes
         left=172.18.18.18
-        leftsubnet=10.1.0.0/16
+        leftsubnet=10.2.0.0/16
         leftid=172.18.18.18
         leftcert=siteBCert.pem
         leftid="C=FI, O=CSE4300, CN=CSE4300 Site B 172.18.18.18"
         leftca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
         right=172.30.30.30
-        rightsubnet=10.2.0.0/16
+        rightsubnet=10.3.0.0/16
         rightcert=cloudCert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Cloud 172.30.30.30"
         rightca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
-        auto=start
-        dpdaction=restart
+        auto=route
+        dpdaction=hold
 EOL
 
 ## Restart ipsec for updates to take effect

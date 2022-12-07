@@ -110,7 +110,7 @@ Vagrant.configure("2") do |config|
     client_a1.vm.provision :file, source: './apps/client_app',
       destination: "client_app"
     # Install dependencies and define the NAT
-    client_a1.vm.provision :shell, run: "always", path: "scripts/client.sh"
+    client_a1.vm.provision :shell, run: "always", path: "scripts/client_a.sh"
   end
 
   # Client A2
@@ -138,7 +138,7 @@ Vagrant.configure("2") do |config|
     client_a2.vm.provision :file, source: './apps/client_app',
       destination: "client_app"
     # Install dependencies and define the NAT
-    client_a2.vm.provision :shell, run: "always", path: "scripts/client.sh"
+    client_a2.vm.provision :shell, run: "always", path: "scripts/client_a.sh"
   end
 
   #######################
@@ -158,7 +158,7 @@ Vagrant.configure("2") do |config|
       virtualbox__intnet: "isp_link_b"
     # Interface towards customer site network
     gateway_b.vm.network "private_network",
-      ip: "10.1.0.1",
+      ip: "10.2.0.1",
       netmask: "255.255.0.0",
       virtualbox__intnet: "intranet_b"
     gateway_b.vm.provider "virtualbox" do |vb|
@@ -187,7 +187,7 @@ Vagrant.configure("2") do |config|
     ## NETWORK INTERFACES
     # Interface towards customer site network
     client_b1.vm.network "private_network",
-      ip: "10.1.0.2",
+      ip: "10.2.0.2",
       netmask: "255.255.0.0",
       virtualbox__intnet: "intranet_b"
     client_b1.vm.provider "virtualbox" do |vb|
@@ -204,7 +204,7 @@ Vagrant.configure("2") do |config|
     client_b1.vm.provision :file, source: './apps/client_app',
       destination: "client_app"
     # Install dependencies and define the NAT
-    client_b1.vm.provision :shell, run: "always", path: "scripts/client.sh"
+    client_b1.vm.provision :shell, run: "always", path: "scripts/client_b.sh"
   end
 
   # Client B2
@@ -215,7 +215,7 @@ Vagrant.configure("2") do |config|
     ## NETWORK INTERFACES
     # Interface towards customer site network
     client_b2.vm.network "private_network",
-      ip: "10.1.0.3",
+      ip: "10.2.0.3",
       netmask: "255.255.0.0",
       virtualbox__intnet: "intranet_b"
     client_b2.vm.provider "virtualbox" do |vb|
@@ -233,7 +233,7 @@ Vagrant.configure("2") do |config|
     client_b2.vm.provision :file, source: './apps/client_app',
       destination: "client_app"
     # Install dependencies and define the NAT
-    client_b2.vm.provision :shell, run: "always", path: "scripts/client.sh"
+    client_b2.vm.provision :shell, run: "always", path: "scripts/client_b.sh"
   end
 
   ##########################
@@ -257,7 +257,7 @@ Vagrant.configure("2") do |config|
       virtualbox__intnet: "isp_link_s"
     # Interface towards cloud network
     gateway_s.vm.network "private_network",
-      ip: "10.2.0.1",
+      ip: "10.3.0.1",
       netmask: "255.255.0.0",
       virtualbox__intnet: "cloud_network_s"
     gateway_s.vm.provider "virtualbox" do |vb|
@@ -285,7 +285,7 @@ Vagrant.configure("2") do |config|
     ## NETWORK INTERFACES
     # Interface towards cloud network
     server_s1.vm.network "private_network",
-      ip: "10.2.0.2",
+      ip: "10.3.0.2",
       netmask: "255.255.0.0",
       virtualbox__intnet: "cloud_network_s"
     server_s1.vm.provider "virtualbox" do |vb|

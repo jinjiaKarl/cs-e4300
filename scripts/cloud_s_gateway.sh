@@ -154,15 +154,15 @@ conn %default
         leftfirewall=yes
         rightfirewall=yes
         left=172.30.30.30
-        leftsubnet=10.2.0.0/16
+        leftsubnet=10.3.0.0/16
         leftcert=cloudCert.pem
         leftid="C=FI, O=CSE4300, CN=CSE4300 Cloud 172.30.30.30"
         leftca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
         rightca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
-        auto=start
-        dpdaction=restart
+        auto=route
+        dpdaction=hold
 conn cloud-to-a
         also=%default
         right=172.16.16.16
@@ -172,7 +172,7 @@ conn cloud-to-a
 conn cloud-to-b
         also=%default
         right=172.18.18.18
-        rightsubnet=10.1.0.0/16
+        rightsubnet=10.2.0.0/16
         rightcert=siteBCert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Site B 172.18.18.18"
 EOL
