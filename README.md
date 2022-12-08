@@ -128,3 +128,74 @@ You should package your project solution to a small number of scripts and config
 You can make changes to the configuration scripts on the _scripts/_ folder. However, do not modify _router.sh_ because the Router simulates the public Internet, which you are not able to reconfigure.
 
 Additionally, you may want to change the cloud network to use a private IPv4 address space. It may be easiest to modify the IP addresses in _Vagrantfile_. Avoid making other changes to _Vagrantfile_. It is not strictly forbidden, though, if technically justified.
+
+
+## Terraform
+
+Beacuse of unsuppoted virtualbox on M1 chip, I use terraform to create the VMs on gcp or azure. It may take some time(about 30 minutes) to create the VMs.
+
+### gcp
+```bash
+cd terraform/gcp
+gcloud auth application-default login
+terraform init
+terraform apply
+# if you want to destroy the VMs
+terraform destroy
+
+gcloud compute ssh server
+cd cs-e4300-main/base && make
+cd ../ && vagrant up
+# check vms status
+vagrant status 
+```
+
+### azure
+```bash
+cd terraform/azure
+az login
+terraform init
+terraform apply
+# if you want to destroy the VMs
+terraform destroy
+
+ssh -i ~/.ssh/id_rsa azureuser@<server_ip>
+cd cs-e4300-main/base && make
+cd ../ && vagrant up
+# check vms status
+vagrant status 
+```
+
+## Analysis
+
+This branch implements a site-to-site vpn based on [strongSwan.](https://www.strongswan.org/documentation.html). Topology is shown below.
+
+![Topology](./img/topology-site-to-site.drawio.png)
+
+A site-to-site VPN is a connection between two or more networks. It is frequently used by companies with multiple offices in different geographic locations that need to access and use the corporate network. The subnet of site A is `10.1.0.0/16`, the subnet of site B is `10.2.0.0/16`, and subnet of cloud S is `10.3.0.0/16`. These three subnets are connected by gateways to comprise a huge subnet.
+
+When a packet is sent from site A to site B, it will be encapsulated by strongSwan and sent to the gateway of site A. The outer source ip address is the ip address of the gateway of site A, and the inner source ip address is the ip address of the real sender. The outer destination ip address is the ip address of the gateway of Cloub S, and the inner destination ip address is the ip address of the real receiver. 
+
+When the packet is received by the gateway of cloud S, it will be decapsulated by strongSwan. According to the inner destination ip address, the packet will be forwarded to Server S1.
+
+Thanks to this [blog](https://thermalcircle.de/doku.php?id=blog:linux:nftables_ipsec_packet_flow), I can understand the packet flow of strongSwan.
+
+Howerver, for this project, site-to-site vpn is not a good choice. Because `xfrm policy` has different policies only if the subnets behind the gateways that is configured by `ipsec.conf` are different, which is not same as the requirement of this project. As a result, the host-to-host solution is a better choice, you can refer to the `main` branch.
+```bash
+# ip xfrm policy
+src 10.1.0.0/16 dst 10.3.0.0/16 
+        dir out priority 375423 ptype main 
+        tmpl src 172.16.16.16 dst 172.30.30.30
+                proto esp spi 0xc5400599 reqid 1 mode tunnel
+src 10.3.0.0/16  dst 10.1.0.0/16  
+        dir fwd priority 375423 ptype main 
+        tmpl src 172.30.30.30 dst 172.16.16.16
+                proto esp reqid 1 mode tunnel
+src 10.3.0.0/16  dst 10.1.0.0/16 
+        dir in priority 375423 ptype main 
+        tmpl src 172.30.30.30 dst 172.16.16.16
+                proto esp reqid 1 mode tunnel
+
+```
+
+Also, it is possible to delete all iptables rules except the nat table rules. Becaue vms need to install and upate packages, which means that vms need to be accessed the Internet. So iptables filter rules for gateways are not meangingful against attackers. But it would be better to add some filter rules on vms, such as allowing a few necessary ports being accessed and dropping all other packets.
