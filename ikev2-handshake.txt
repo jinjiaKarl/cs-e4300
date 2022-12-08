@@ -1,0 +1,47 @@
+root@router:~# tcpdump udp port 500 or 4500 -i enp0s8 -nvv
+
+14:04:09.400156 IP (tos 0x0, ttl 64, id 37569, offset 0, flags [DF], proto UDP (17), length 324)
+    172.16.16.16.500 > 172.30.30.30.500: [bad udp cksum 0x879e -> 0xc8d4!] isakmp 2.0 msgid 00000000 cookie b19b0f12142c3f8f->0000000000000000: parent_sa ikev2_init[I]:
+    (sa: len=36
+        (p: #1 protoid=isakmp transform=3 len=36
+            (t: #1 type=encr id=#20 (type=keylen value=0100))
+            (t: #2 type=prf id=#6 )
+            (t: #3 type=dh id=#20 )))
+    (v2ke: len=96 group=#20)
+    (nonce: len=32 nonce=(8a9d4036e28182a11df97b3ddef737f378ebe332cf285db3a5985902dc677cac) )
+    (n: prot_id=#0 type=16388(nat_detection_source_ip))
+    (n: prot_id=#0 type=16389(nat_detection_destination_ip))
+    (n: prot_id=#0 type=16430(status))
+    (n: prot_id=#0 type=16431(status))
+    (n: prot_id=#0 type=16406(status))
+14:04:09.403503 IP (tos 0x0, ttl 63, id 2462, offset 0, flags [DF], proto UDP (17), length 369)
+    172.30.30.30.500 > 172.16.16.16.500: [udp sum ok] isakmp 2.0 msgid 00000000 cookie b19b0f12142c3f8f->654f0585778248c7: parent_sa ikev2_init[R]:
+    (sa: len=36
+        (p: #1 protoid=isakmp transform=3 len=36
+            (t: #1 type=encr id=#20 (type=keylen value=0100))
+            (t: #2 type=prf id=#6 )
+            (t: #3 type=dh id=#20 )))
+    (v2ke: len=96 group=#20)
+    (nonce: len=32 nonce=(17827834a9be854f76fbada8111d4dbe2007d22149be066ae25fc64d76e0017b) )
+    (n: prot_id=#0 type=16388(nat_detection_source_ip))
+    (n: prot_id=#0 type=16389(nat_detection_destination_ip))
+    (v2cr: len=41)
+    (n: prot_id=#0 type=16430(status))
+    (n: prot_id=#0 type=16431(status))
+    (n: prot_id=#0 type=16404(status))
+14:04:09.406005 IP (tos 0x0, ttl 64, id 37570, offset 0, flags [DF], proto UDP (17), length 1068)
+    172.16.16.16.4500 > 172.30.30.30.4500: [bad udp cksum 0x8a86 -> 0xb1d8!] NONESP-encap: isakmp 2.0 msgid 00000001 cookie b19b0f12142c3f8f->654f0585778248c7: child_sa  ikev2_auth[I]:
+    (v2e: len=1004)
+14:04:09.415353 IP (tos 0x0, ttl 63, id 2465, offset 0, flags [DF], proto UDP (17), length 1280)
+    172.30.30.30.4500 > 172.16.16.16.4500: [udp sum ok] NONESP-encap: isakmp 2.0 msgid 00000001 cookie b19b0f12142c3f8f->654f0585778248c7: child_sa  ikev2_auth[R]:
+    (#53) [|v2IDr]
+14:04:09.415365 IP (tos 0x0, ttl 63, id 2466, offset 0, flags [DF], proto UDP (17), length 280)
+    172.30.30.30.4500 > 172.16.16.16.4500: [udp sum ok] NONESP-encap: isakmp 2.0 msgid 00000001 cookie b19b0f12142c3f8f->654f0585778248c7: child_sa  ikev2_auth[R]:
+    (#53)
+14:41:21.339845 IP (tos 0x0, ttl 64, id 45329, offset 0, flags [DF], proto UDP (17), length 89)
+    172.30.30.30.4500 > 172.18.18.18.4500: [udp sum ok] NONESP-encap: isakmp 2.0 msgid 00000010 cookie 1b200e4616a18b83->d87dcc10375036f5: child_sa  inf2:
+    (v2e: len=25)
+14:41:21.340799 IP (tos 0x0, ttl 63, id 62872, offset 0, flags [DF], proto UDP (17), length 89)
+    172.18.18.18.4500 > 172.30.30.30.4500: [udp sum ok] NONESP-encap: isakmp 2.0 msgid 00000010 cookie 1b200e4616a18b83->d87dcc10375036f5: child_sa  inf2[IR]:
+    (v2e: len=25)
+
