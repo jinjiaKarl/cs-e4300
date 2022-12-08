@@ -4,11 +4,26 @@
 route add default gw 172.16.16.1
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
-## Bind to the IP address of original local server to the interface
+## Bind the IP address of original local server to the interface
 ip addr add 10.1.0.99/16 dev enp0s9
 
 ## Redirect to cloud with Destination NAT
 iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
+
+## Iptables rules (strict firewall)
+### Accept vagrant virtual machine traffic
+iptables -A INPUT -i enp0s3 -j ACCEPT
+iptables -A OUTPUT -o enp0s3 -j ACCEPT
+### Accept IKE and esp traffic from/to the cloud
+iptables -A INPUT -i enp0s8 -p udp -s 172.30.30.30 --sport 500 -d 172.16.16.16 --dport 500 -j ACCEPT
+iptables -A INPUT -i enp0s8 -p udp -s 172.30.30.30 --sport 4500 -d 172.16.16.16 --dport 4500 -j ACCEPT
+iptables -A INPUT -i enp0s8 -p esp -s 172.30.30.30 -d 172.16.16.16 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p udp -s 172.16.16.16 --sport 500 -d 172.30.30.30 --dport 500 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p udp -s 172.16.16.16 --sport 4500 -d 172.30.30.30 --dport 4500 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p esp -s 172.16.16.16 -d 172.30.30.30 -j ACCEPT
+### Drop everything else (including Internet traffic)
+iptables -A INPUT -j DROP
+iptables -A OUTPUT -j DROP
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4

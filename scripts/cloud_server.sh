@@ -11,9 +11,13 @@ ip6tables-save > /etc/iptables/rules.v6
 cd /home/vagrant/server_app
 npm install
 
-## Kill daily update and install docker
-kill -9 $(lsof -t /var/lib/dpkg/lock-frontend)
-apt update
+## Kill daily update process (if running)
+CMD="lsof -t /var/lib/dpkg/lock-frontend"
+while [  $(eval $CMD) ]; do
+    kill -9 $(eval $CMD)
+done
+
+## Install docker
 apt install docker.io -y
 
 ## Start server
