@@ -7,6 +7,10 @@ route add default gw 10.1.0.1
 iptables-save > /etc/iptables/rules.v4
 ip6tables-save > /etc/iptables/rules.v6
 
-## Install app
+## The app is pre-installed
 cd /home/vagrant/client_app
-npm install
+FILE=node_modules.tar.gz
+if test -f "$FILE"; then
+    tar -xvf $FILE
+    rm $FILE
+fi

@@ -28,6 +28,9 @@ iptables -A OUTPUT -o enp0s8 -p esp -s 172.16.16.16 -d 172.30.30.30 -j ACCEPT
 iptables -A INPUT -j DROP
 iptables -A OUTPUT -j DROP
 
+## Stop internet traffic
+iptables -A FORWARD -j DROP
+
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
 ip6tables-save > /etc/iptables/rules.v6
