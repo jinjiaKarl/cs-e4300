@@ -7,9 +7,6 @@ iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 ## Bind the IP address of original local server to the interface
 ip addr add 10.1.0.99/16 dev enp0s9
 
-## Redirect to cloud with Destination NAT
-iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
-
 ## Iptables rules (strict firewall)
 ### Accept vagrant virtual machine traffic
 iptables -A INPUT -i enp0s3 -j ACCEPT
@@ -114,22 +111,37 @@ if [ `grep -c "$FIND_STR" $FIND_FILE` == '0' ];then
     echo "$FIND_STR" >> $FIND_FILE
 fi
 
+## Redirect to cloud with Destination NAT when using VPN, and remove the rule when disconnected
+cat > /etc/ipsec_updown.sh <<EOL
+#! /bin/sh
+case "\$PLUTO_VERB:\$1" in
+up-host:|up-client:)
+  iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
+  ;;
+down-host:|down-client:)
+  iptables -t nat -D PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
+  ;;
+esac
+EOL
+
+chmod +x /etc/ipsec_updown.sh
+
 cat > /etc/ipsec.conf <<EOL
 conn a-to-cloud
         keyexchange=ikev2
-        leftfirewall=yes
-        rightfirewall=yes
         left=172.16.16.16
         leftsubnet=172.16.16.16/32
         leftid=172.16.16.16
         leftcert=siteACert.pem
         leftid="C=FI, O=CSE4300, CN=CSE4300 Site A 172.16.16.16"
         leftca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
+        leftupdown=/etc/ipsec_updown.sh
         right=172.30.30.30
         rightsubnet=172.30.30.30/32
         rightcert=cloudCert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Cloud 172.30.30.30"
         rightca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
+        rightupdown=/etc/ipsec_updown.sh
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
         auto=start

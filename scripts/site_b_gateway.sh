@@ -114,6 +114,21 @@ if [ `grep -c "$FIND_STR" $FIND_FILE` == '0' ];then
     echo "$FIND_STR" >> $FIND_FILE
 fi
 
+## Redirect to cloud with Destination NAT when using VPN, and remove the rule when disconnected
+cat > /etc/ipsec_updown.sh <<EOL
+#! /bin/sh
+case "\$PLUTO_VERB:\$1" in
+up-host:|up-client:)
+  iptables -t nat -A PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
+  ;;
+down-host:|down-client:)
+  iptables -t nat -D PREROUTING -p tcp -d 10.1.0.99 --dport 8080 -j DNAT --to 172.30.30.30:8080
+  ;;
+esac
+EOL
+
+chmod +x /etc/ipsec_updown.sh
+
 cat > /etc/ipsec.conf <<EOL
 conn b-to-cloud
         keyexchange=ikev2
@@ -125,11 +140,13 @@ conn b-to-cloud
         leftcert=siteBCert.pem
         leftid="C=FI, O=CSE4300, CN=CSE4300 Site B 172.18.18.18"
         leftca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
+        leftupdown=/etc/ipsec_updown.sh
         right=172.30.30.30
         rightsubnet=172.30.30.30/32
         rightcert=cloudCert.pem
         rightid="C=FI, O=CSE4300, CN=CSE4300 Cloud 172.30.30.30"
         rightca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
+        rightupdown=/etc/ipsec_updown.sh
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
         auto=start

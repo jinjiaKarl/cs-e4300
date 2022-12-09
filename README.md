@@ -132,8 +132,4 @@ Additionally, you may want to change the cloud network to use a private IPv4 add
 
 ## Analysis
 
-1. If ipecsec stops, the traffic from the site to cloud can be leaked. Because the DNAT rule of the gateway a or b is set to the address that the router knows. I think the following solutions are possible:
-    * Building a backgroud servivce to monitor the ipsec status and if it stops, remove the DNAT rule. But it is still possible to leak some unencrpted traffic.
-    * Writing a netfilter hook to monitor the traffic and if it is not encrypted, drop it. But it is not easy to implement.
-
-2. We use [certificates](https://docs.strongswan.org/docs/5.9/howtos/introduction.html#_authentication_basics) for authentication, it is easy to revoke the certificate using CRLs if it is compromised. But if we use PSK, it is hard to revoke the key. We can use a new key to replace the old one, but it is not easy to do it in a short time.
+1. We use [certificates](https://docs.strongswan.org/docs/5.9/howtos/introduction.html#_authentication_basics) for authentication, it is easy to revoke the certificate using CRLs if it is compromised. But if we use PSK, it is hard to revoke the key. We can use a new key to replace the old one, but it is not easy to do it in a short time.

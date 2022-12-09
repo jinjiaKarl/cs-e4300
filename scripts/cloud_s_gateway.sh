@@ -6,10 +6,6 @@ route add default gw 172.30.30.1
 ## NAT Masquerade for enp0s8
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
-## Destination NAT from client to server
-iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.16.16.16 --dport 8080 -j DNAT --to-destination 10.1.0.2:30000
-iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.18.18.18 --dport 8080 -j DNAT --to-destination 10.1.0.2:30001
-
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4
 ip6tables-save > /etc/iptables/rules.v6
@@ -115,17 +111,34 @@ if [ `grep -c "$FIND_STR" $FIND_FILE` == '0' ];then
     echo "$FIND_STR" >> $FIND_FILE
 fi
 
+## Destination NAT from client to server when using VPN, and remove the rule when disconnected
+cat > /etc/ipsec_updown.sh <<EOL
+#! /bin/sh
+case "\$PLUTO_VERB:\$1" in
+up-host:|up-client:)
+  iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.16.16.16 --dport 8080 -j DNAT --to-destination 10.1.0.2:30000
+  iptables -t nat -A PREROUTING -i enp0s8 -p tcp -s 172.18.18.18 --dport 8080 -j DNAT --to-destination 10.1.0.2:30001
+  ;;
+down-host:|down-client:)
+  iptables -t nat -D PREROUTING -i enp0s8 -p tcp -s 172.16.16.16 --dport 8080 -j DNAT --to-destination 10.1.0.2:30000
+  iptables -t nat -D PREROUTING -i enp0s8 -p tcp -s 172.18.18.18 --dport 8080 -j DNAT --to-destination 10.1.0.2:30001
+  ;;
+esac
+EOL
+
+chmod +x /etc/ipsec_updown.sh
+
 cat > /etc/ipsec.conf <<EOL
 conn %default
         keyexchange=ikev2
-        leftfirewall=yes
-        rightfirewall=yes
         left=172.30.30.30
         leftsubnet=172.30.30.30/32
         leftcert=cloudCert.pem
         leftid="C=FI, O=CSE4300, CN=CSE4300 Cloud 172.30.30.30"
         leftca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
+        leftupdown=/etc/ipsec_updown.sh
         rightca="C=FI, O=CSE4300, CN=CSE4300 Root CA"
+        rightupdown=/etc/ipsec_updown.sh
         ike=aes256gcm16-prfsha384-ecp384!
         esp=aes256gcm16-ecp384!
         auto=start
