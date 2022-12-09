@@ -24,21 +24,6 @@ WantedBy=multi-user.target
 EOL
 sudo systemctl enable server --now
 
-cat > /home/vagrant/
-
-## Start server
-cat > /etc/systemd/system/server.service <<EOL
-[Unit]
-Description=Server service
-
-[Service]
-ExecStart=/bin/bash -c "cd /home/vagrant/server_app && node server.js"
-
-[Install]
-WantedBy=multi-user.target
-EOL
-sudo systemctl enable server --now
-
 ## another tricky way to run the app in the background
 ## https://stackoverflow.com/questions/25331758/vagrant-ssh-c-and-keeping-a-background-process-running-after-connection-closed
 # nohup node server.js &> /home/vagrant/nohup.grid.out & sleep 1

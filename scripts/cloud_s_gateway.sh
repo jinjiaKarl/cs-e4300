@@ -6,42 +6,26 @@ route add default gw 172.30.30.1
 ## NAT Masquerade for enp0s8
 iptables -t nat -A POSTROUTING -o enp0s8 -j MASQUERADE
 
-## Accept internal traffic
+## Iptables rules (strict firewall)
+### Accept vagrant virtual machine traffic
 iptables -A INPUT -i enp0s3 -j ACCEPT
 iptables -A OUTPUT -o enp0s3 -j ACCEPT
-
-## incoming traffic from the internet to the cloud
-iptables -A INPUT -p tcp --sport 80 -j ACCEPT
-iptables -A INPUT -p tcp --sport 443 -j ACCEPT
-iptables -A INPUT -p udp -s 172.16.16.16 --sport 500 -j ACCEPT
-iptables -A INPUT -p udp -s 172.18.18.18 --sport 500 -j ACCEPT
-iptables -A INPUT -p udp -s 172.16.16.16 --sport 4500 -j ACCEPT
-iptables -A INPUT -p udp -s 172.18.18.18 --sport 4500 -j ACCEPT
-iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
-iptables -A INPUT -p esp -j ACCEPT
-iptables -A INPUT -p ah -j ACCEPT
-iptables -A INPUT -p icmp -j ACCEPT
-iptables -A INPUT -s 172.16.16.16 -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A INPUT -s 172.18.18.18 -m state --state ESTABLISHED,RELATED -j ACCEPT
+### Accept IKE and esp traffic from/to the clients
+iptables -A INPUT -i enp0s8 -p udp -s 172.16.16.16 --sport 500 -d 172.30.30.30 --dport 500 -j ACCEPT
+iptables -A INPUT -i enp0s8 -p udp -s 172.16.16.16 --sport 4500 -d 172.30.30.30 --dport 4500 -j ACCEPT
+iptables -A INPUT -i enp0s8 -p esp -s 172.16.16.16 -d 172.30.30.30 -j ACCEPT
+iptables -A INPUT -i enp0s8 -p udp -s 172.18.18.18 --sport 500 -d 172.30.30.30 --dport 500 -j ACCEPT
+iptables -A INPUT -i enp0s8 -p udp -s 172.18.18.18 --sport 4500 -d 172.30.30.30 --dport 4500 -j ACCEPT
+iptables -A INPUT -i enp0s8 -p esp -s 172.18.18.18 -d 172.30.30.30 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p udp -s 172.30.30.30 --sport 500 -d 172.16.16.16 --dport 500 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p udp -s 172.30.30.30 --sport 4500 -d 172.16.16.16 --dport 4500 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p esp -s 172.30.30.30 -d 172.16.16.16 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p udp -s 172.30.30.30 --sport 500 -d 172.18.18.18 --dport 500 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p udp -s 172.30.30.30 --sport 4500 -d 172.18.18.18 --dport 4500 -j ACCEPT
+iptables -A OUTPUT -o enp0s8 -p esp -s 172.30.30.30 -d 172.18.18.18 -j ACCEPT
+### Drop everything else (including Internet traffic)
 iptables -A INPUT -j DROP
-
-## outgoing traffic from the cloud to the internet
-iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
-iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
-iptables -A OUTPUT -p udp -d 172.16.16.16 --dport 500 -j ACCEPT
-iptables -A OUTPUT -p udp -d 172.18.18.18 --dport 500 -j ACCEPT
-iptables -A OUTPUT -p udp -d 172.16.16.16 --dport 4500 -j ACCEPT
-iptables -A OUTPUT -p udp -d 172.18.18.18 --dport 4500 -j ACCEPT
-iptables -A OUTPUT -p tcp --sport 8080 -j ACCEPT
-iptables -A OUTPUT -p esp -j ACCEPT
-iptables -A OUTPUT -p ah -j ACCEPT
-iptables -A OUTPUT -p icmp -j ACCEPT
-iptables -A OUTPUT -d 172.16.16.16 -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A OUTPUT -d 172.18.18.18 -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A OUTPUT -j DROP
-
-## only vpn traffic to the internet
-# iptables -A FORWARD -j DROP
 
 ## Save the iptables rules
 iptables-save > /etc/iptables/rules.v4

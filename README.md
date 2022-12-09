@@ -168,7 +168,7 @@ vagrant status
 
 ## Analysis
 
-This branch implements a site-to-site vpn based on [strongSwan.](https://www.strongswan.org/documentation.html). Topology is shown below.
+This branch implements a site-to-site vpn based on [strongSwan](https://www.strongswan.org/documentation.html). Topology is shown below.
 
 ![Topology](./img/topology-site-to-site.drawio.png)
 
@@ -197,5 +197,3 @@ src 10.3.0.0/16  dst 10.1.0.0/16
                 proto esp reqid 1 mode tunnel
 
 ```
-
-Also, it is possible to delete all iptables rules except the nat table rules. Becaue vms need to install and upate packages, which means that vms need to be accessed the Internet. So iptables filter rules for gateways are not meangingful against attackers. But it would be better to add some filter rules on vms, such as allowing a few necessary ports being accessed and dropping all other packets.
