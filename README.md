@@ -128,3 +128,12 @@ You should package your project solution to a small number of scripts and config
 You can make changes to the configuration scripts on the _scripts/_ folder. However, do not modify _router.sh_ because the Router simulates the public Internet, which you are not able to reconfigure.
 
 Additionally, you may want to change the cloud network to use a private IPv4 address space. It may be easiest to modify the IP addresses in _Vagrantfile_. Avoid making other changes to _Vagrantfile_. It is not strictly forbidden, though, if technically justified.
+
+
+## Analysis
+
+1. If ipecsec stops, the traffic from the site to cloud can be leaked. Because the DNAT rule of the gateway a or b is set to the address that the router knows. I think the following solutions are possible:
+    * Building a backgroud servivce to monitor the ipsec status and if it stops, remove the DNAT rule. But it is still possible to leak some unencrpted traffic.
+    * Writing a netfilter hook to monitor the traffic and if it is not encrypted, drop it. But it is not easy to implement.
+
+2. We use [certificates](https://docs.strongswan.org/docs/5.9/howtos/introduction.html#_authentication_basics) for authentication, it is easy to revoke the certificate using CRLs if it is compromised. But if we use PSK, it is hard to revoke the key. We can use a new key to replace the old one, but it is not easy to do it in a short time.
