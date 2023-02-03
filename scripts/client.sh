@@ -9,7 +9,7 @@ ip6tables-save > /etc/iptables/rules.v6
 
 ## The app is pre-installed
 cd /home/vagrant/client_app
-FILE=node_modules.tar.gz
+FILE=node_modules.tar.xz
 if test -f "$FILE"; then
     tar -xvf $FILE
     rm $FILE
