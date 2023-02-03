@@ -132,8 +132,6 @@ chmod +x /etc/ipsec_updown.sh
 cat > /etc/ipsec.conf <<EOL
 conn b-to-cloud
         keyexchange=ikev2
-        leftfirewall=yes
-        rightfirewall=yes
         left=172.18.18.18
         leftsubnet=172.18.18.18/32
         leftid=172.18.18.18

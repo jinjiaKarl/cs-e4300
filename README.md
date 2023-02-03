@@ -28,32 +28,35 @@ In each customer site, i.e. IoT client network, there is one VM (S) with the IP 
 
 1. Download and install the latest version of [Vagrant](https://www.vagrantup.com/docs/installation).
 
+The project has been tested with vagrant version 2.3.4 and VirtualBox versions 6.1.40 and 7.0.4.
+
 If you already have VirtualBox installed, you might have to update Vagrant's plugin for VirtualBox guest additions (vagrant-vbguest):
 ```
 vagrant plugin update
 ```
 
-2. Initialize base VM:
+2. Initialize base VM (only once)
 
 The commands for building the base VM are provided in a simple Makefile (for Linux) and PowerShell script (for Windows). If the scripts do no work on your computer, simply run the commands manually. You only need to build the base VM once.
 
 Linux:
 
 ```bash
-cd base/
-make
+cd base
+./create.sh
 ```
 
 Windows PowerShell:
 
 ```
-cd base/
-./make.ps1
+cd base
+.\create.ps1
 ```
 
 3. Initialize the other VMs:
 
 ```bash
+cd ..
 vagrant up
 ```
 
